@@ -186,3 +186,21 @@
     </div>
 </body>
 </html>
+<div id="notification" class="notif"></div>
+
+<script>
+function showGoal(player) {
+  let notif = document.getElementById("notification");
+  notif.innerText = "⚽ BUT de " + player + " !";
+  notif.style.display = "block";
+
+  setTimeout(() => {
+    notif.style.display = "none";
+  }, 3000);
+}
+
+// test
+setTimeout(() => {
+  showGoal("Mbappé");
+}, 5000);
+</script>

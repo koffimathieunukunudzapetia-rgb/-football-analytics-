@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Analytics Pro</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--primary:#00d4ff;--bg-dark:#0a0e1a;--bg-card:#151b2d;--text:#fff;--text2:#8b92a8;--border:#2a3655}
+        body{font-family:system-ui,sans-serif;background:var(--bg-dark);color:var(--text);min-height:100vh}
+        .header{background:linear-gradient(135deg,#0f1535,#1a1f3a);padding:15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+        .logo{display:flex;align-items:center;gap:10px}
+        .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--primary),#0099cc);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+        .logo-text h1{font-size:18px;font-weight:700}
+        .logo-text span{color:var(--text2);font-size:10px;text-transform:uppercase}
+        .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:600;background:linear-gradient(135deg,var(--primary),#0099cc);color:white}
+        .container{padding:15px;max-width:1200px;margin:0 auto}
+        .match-list{display:grid;gap:10px;margin-bottom:20px}
+        .match-item{background:var(--bg-card);border-radius:12px;padding:15px;cursor:pointer;border:1px solid transparent;transition:all .3s}
+        .match-item:hover{border-color:var(--primary)}
+        .match-teams{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .team{display:flex;align-items:center;gap:8px;font-weight:600}
+        .team-flag{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+        .match-score{font-size:24px;font-weight:700;color:var(--primary)}
+        .match-info{display:flex;justify-content:space-between;font-size:12px;color:var(--text2)}
+        .live-badge{background:#ff3e3e;color:white;padding:2px 8px;border-radius:4px;font-size:10px;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        .pitch-container{background:var(--bg-card);border-radius:16px;padding:15px;margin-bottom:20px}
+        .pitch{width:100%;aspect-ratio:1.6;background:linear-gradient(180deg,#1a5f1a,#0d3d0d);border-radius:12px;position:relative;overflow:hidden}
+        .pitch-lines{position:absolute;inset:15px;border:2px solid rgba(255,255,255,.3)}
+        .center-line{position:absolute;left:50%;top:0;bottom:0;width:2px;background:rgba(255,255,255,.3);transform:translateX(-50%)}
+        .center-circle{position:absolute;left:50%;top:50%;width:80px;height:80px;border:2px solid rgba(255,255,255,.3);border-radius:50%;transform:translate(-50%,-50%)}
+        .penalty-area{position:absolute;width:80px;height:140px;border:2px solid rgba(255,255,255,.3);top:50%;transform:translateY(-50%)}
+        .penalty-area.left{left:0;border-left:none}.penalty-area.right{right:0;border-right:none}
+        .player{position:absolute;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;cursor:pointer;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+        .player.home{background:linear-gradient(135deg,#ff6b6b,#ee5a24)}.player.away{background:linear-gradient(135deg,#4ecdc4,#44a08d)}
+        .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+        .stat-card{background:var(--bg-card);border-radius:12px;padding:15px;border:1px solid var(--border)}
+        .stat-title{font-size:12px;color:var(--text2);margin-bottom:5px}
+        .stat-value{font-size:28px;font-weight:700}
+        .stat-bar{height:6px;background:var(--bg-dark);border-radius:3px;overflow:hidden;display:flex;margin-top:8px}
+        .stat-bar-fill{height:100%}.stat-bar-fill.home{background:#ff6b6b}.stat-bar-fill.away{background:#4ecdc4}
+        .panel-card{background:var(--bg-card);border-radius:16px;padding:15px;margin-top:15px}
+        .panel-title{font-size:16px;font-weight:600;margin-bottom:15px}
+        .event-item{display:flex;gap:10px;align-items:center;padding:10px;background:var(--bg-dark);border-radius:8px;margin-bottom:8px}
+        .event-time{color:var(--primary);font-weight:600;min-width:30px}
+        .event-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px}
+        .event-icon.goal{background:#00ff88}.event-icon.card{background:#ffaa00}.event-icon.sub{background:var(--primary)}
+        .event-player{font-weight:600;font-size:14px}.event-desc{font-size:12px;color:var(--text2)}
+        .deploy-banner{background:linear-gradient(135deg,#00d4ff,#0099cc);color:white;padding:10px;text-align:center;font-weight:600;position:fixed;bottom:0;left:0;right:0;z-index:1000}
+        @media(max-width:768px){.stats-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">⚽</div>
+            <div class="logo-text">
+                <h1>Football Analytics Pro</h1>
+                <span>Analyse Tactique</span>
+            </div>
+        </div>
+        <button class="btn">📊 Exporter</button>
+    </header>
+
+    <div class="container">
+        <div class="match-list">
+            <div class="match-item">
+                <div class="match-teams">
+                    <div class="team">
+                        <div class="team-flag" style="background:linear-gradient(135deg,#ff6b6b,#ee5a24)">PSG</div>
+                        <span>PSG</span>
+                    </div>
+                    <span class="match-score">2 - 1</span>
+                    <div class="team">
+                        <span>OM</span>
+                        <div class="team-flag" style="background:linear-gradient(135deg,#4ecdc4,#44a08d)">OM</div>
+                    </div>
+                </div>
+                <div class="match-info">
+                    <span>Ligue 1 • 75'</span>
+                    <span class="live-badge">LIVE</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pitch-container">
+            <div class="pitch">
+                <div class="pitch-lines">
+                    <div class="center-line"></div>
+                    <div class="center-circle"></div>
+                    <div class="penalty-area left"></div>
+                    <div class="penalty-area right"></div>
+                </div>
+                <div class="player home" style="left:5%;top:50%">1</div>
+                <div class="player home" style="left:20%;top:20%">2</div>
+                <div class="player home" style="left:20%;top:40%">5</div>
+                <div class="player home" style="left:20%;top:60%">3</div>
+                <div class="player home" style="left:20%;top:80%">25</div>
+                <div class="player home" style="left:35%;top:35%">17</div>
+                <div class="player home" style="left:35%;top:65%">8</div>
+                <div class="player home" style="left:50%;top:50%">10</div>
+                <div class="player home" style="left:60%;top:25%">29</div>
+                <div class="player home" style="left:60%;top:75%">23</div>
+                <div class="player home" style="left:70%;top:50%">7</div>
+                <div class="player away" style="right:5%;top:50%">16</div>
+                <div class="player away" style="right:20%;top:20%">7</div>
+                <div class="player away" style="right:20%;top:40%">99</div>
+                <div class="player away" style="right:20%;top:60%">3</div>
+                <div class="player away" style="right:20%;top:80%">6</div>
+                <div class="player away" style="right:35%;top:30%">27</div>
+                <div class="player away" style="right:35%;top:70%">19</div>
+                <div class="player away" style="right:45%;top:50%">11</div>
+                <div class="player away" style="right:55%;top:25%">23</div>
+                <div class="player away" style="right:55%;top:75%">10</div>
+                <div class="player away" style="right:65%;top:50%">9</div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Possession</div>
+                <div class="stat-value">58%</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill home" style="width:58%"></div>
+                    <div class="stat-bar-fill away" style="width:42%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Tirs (cadrés)</div>
+                <div class="stat-value">12 (8)</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill home" style="width:60%"></div>
+                    <div class="stat-bar-fill away" style="width:40%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Passes</div>
+                <div class="stat-value">487</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill home" style="width:65%"></div>
+                    <div class="stat-bar-fill away" style="width:35%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Duels</div>
+                <div class="stat-value">24</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill home" style="width:52%"></div>
+                    <div class="stat-bar-fill away" style="width:48%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-card">
+            <div class="panel-title">Fil d'Actualité</div>
+            <div class="event-item">
+                <span class="event-time">73'</span>
+                <div class="event-icon goal">⚽</div>
+                <div>
+                    <div class="event-player">Mbappé</div>
+                    <div class="event-desc">But sur penalty</div>
+                </div>
+            </div>
+            <div class="event-item">
+                <span class="event-time">54'</span>
+                <div class="event-icon goal">⚽</div>
+                <div>
+                    <div class="event-player">Aubameyang</div>
+                    <div class="event-desc">Égalisation</div>
+                </div>
+            </div>
+            <div class="event-item">
+                <span class="event-time">23'</span>
+                <div class="event-icon goal">⚽</div>
+                <div>
+                    <div class="event-player">Dembélé</div>
+                    <div class="event-desc">Ouverture du score</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="deploy-banner">
+        🚀 Site prêt pour Netlify !
+    </div>
+</body>
+</html>
